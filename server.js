@@ -21,6 +21,10 @@ router.get('/', function *(next){
     this.body = yield render('index', {boards: boards});
 });
 
+router.head('/trelloCallback', function *(next){
+
+});
+
 router.post('/trelloCallback', function *(next){
     logger.info(require('util').inspect(this.body));
 });
