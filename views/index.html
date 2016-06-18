@@ -1,0 +1,14 @@
+
+<h1> welcome to trello app </h1>
+<p> this is where the magic happens</p>
+<select>
+{% for board in boards %}
+    <option value="{{board.id}}">{{board.name}}</option>
+{% endfor %}
+</select>
+<ul>
+{% for board in boards %}
+    <li>{{board.id}}: {{board.name}}</li>
+{% endfor %}
+</ul>
+</select>
