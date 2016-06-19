@@ -22,7 +22,7 @@ router.get('/', function *(next){
 });
 
 router.head('/trelloCallback', function *(next){
-
+    this.status = 200;
 });
 
 router.post('/trelloCallback', function *(next){
@@ -31,6 +31,7 @@ router.post('/trelloCallback', function *(next){
 
 
 app.use(router.routes());
+app.use(router.allowedMethods());
 
 app.listen(serverPort, () => {
     logger.info(`server is up on port ${serverPort}`);
