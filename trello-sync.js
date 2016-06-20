@@ -45,9 +45,9 @@ module.exports = function () {
     function updateChange(changeModel) {
         var change = trelloClient.determineChange(changeModel);
         if (change.type === 'createList' || change.type === 'createCard'){
-            return ngaClient.createEntity(changeModel);
+            return ngaClient.createEntity(change);
         } else {
-            return ngaClient.updateEntity(changeModel);
+            return ngaClient.updateEntity(change);
         }
     }
 
