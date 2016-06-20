@@ -1,7 +1,7 @@
 {
-  "host": "http://localhost.emea.hpqcorp.net:8080",
-  "clientId": "trello_49ejxemdlmgmqu8gzp5qqv5g6",
-  "clientSecret": "+2e1ece8e131e483Q",
+  "host": "https://hackathon.almoctane.com",
+  "clientId": "trelloflow_lo6102xm29zwob187x4gvd7p2",
+  "clientSecret": "?cc2daeb98cf7944dS",
   "sharedSpace": 1001,
-  "workspace": 1002
+  "workspace": 2001
 }
