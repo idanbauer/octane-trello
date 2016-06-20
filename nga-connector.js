@@ -4,7 +4,7 @@ module.exports = function () {
     var settings = require('./settings.json'),
         HttpClient = require('scoped-http-client'),
         denodeify = require('denodeify'),
-        logger = require('./logger.js'),
+        logger = require('./logger.js').logger,
         request = denodeify(require('request'));
 
     function setCookies(res) {
@@ -45,6 +45,21 @@ module.exports = function () {
         return settings.host + '/api/shared_spaces/' + settings.sharedSpace + '/workspaces/' + settings.workspace + '/' + apiCall;
     }
 
+    function convertFilterObjToString(filterObj) {
+        var filterString = '';
+        for (let key of Object.keys(filterObj)) {
+            filterString += key + '=\'' + filterObj[key] + '\';';
+        }
+        filterString = filterString.slice(0, -1);
+        return filterString;
+    }
+
+    function buildFilter(queryObj) {
+        var filterString = `?limit=100&query="${convertFilterObjToString(queryObj)}"`;
+        logger.info('filter string: ' + filterString);
+        return filterString;
+    }
+
     function buildHeader(authRes) {
         var csrfRegexRes = /HPSSO_COOKIE_CSRF=(\w*\d*);/.exec(authRes.headers['set-cookie']);
         var retVal = {
@@ -71,14 +86,14 @@ module.exports = function () {
 
     function parseResponse(resolve, reject, err, res, body) {
         if (err) {
-            console.log('error: ' + err);
-            console.log('body: ' + body);
+            logger.error('error: ' + err);
+            logger.error('body: ' + body);
             reject(err);
         }
 
-        if (res.statusCode !== 201) {
-            console.log('statusCode: ' + res.statusCode);
-            console.log('body: ' + require('util').inspect(body));
+        if (res.statusCode !== 201 || res.statusCode !== 200) {
+            logger.warn('statusCode: ' + res.statusCode);
+            logger.warn('body: ' + require('util').inspect(body));
         }
 
         var parsedBody = parseJsonResponse(body);
@@ -97,7 +112,7 @@ module.exports = function () {
                         }
 
                         if (res.statusCode !== 200) {
-                            console.log('statusCode: ' + res.statusCode);
+                            logger.warn('statusCode: ' + res.statusCode);
                         }
                         var parsedBody = parseJsonResponse(body);
                         resolve({ res: res, data: parsedBody });
@@ -108,7 +123,7 @@ module.exports = function () {
         return promise;
     }
 
-    function postRequest(response, apiCall, data) {
+    function postRequest(apiCall, data) {
         var promise = new Promise((resolve, reject) => {
             authenticate().then((authRes) => {
                 request({
@@ -126,14 +141,39 @@ module.exports = function () {
         return promise;
     }
 
-    function putRequest(response, apiCall, data) {
+    function putRequest(apiCall, entityId, data) {
         var promise = new Promise((resolve, reject) => {
             authenticate().then((authRes) => {
-                HttpClient.create(buildApiCall(apiCall))
-
-                    .headers(buildHeader(authRes))
-                    .put(data)(function (err, res, body) {
+                request({
+                    url: buildApiCall(apiCall) + '/' + entityId,
+                    method: 'PUT',
+                    headers: buildHeader(authRes),
+                    json: data
+                },
+                    function (err, res, body) {
                         parseResponse(resolve, reject, err, res, body);
+                    });
+            })
+                .catch(err => reject(err));
+        });
+        return promise;
+    }
+
+    function filter(apiCall, filterObj) {
+        var promise = new Promise((resolve, reject) => {
+            authenticate().then((authRes) => {
+                HttpClient.create(buildApiCall(apiCall) + buildFilter(filterObj))
+                    .headers(buildHeader(authRes))
+                    .get()(function (err, res, body) {
+                        if (err) {
+                            reject('error: ' + err);
+                        }
+
+                        if (res.statusCode !== 200) {
+                            logger.warn('filter statusCode: ' + res.statusCode);
+                        }
+                        var parsedBody = parseJsonResponse(body);
+                        resolve({ res: res, data: parsedBody });
                     });
             })
                 .catch(err => reject(err));
@@ -144,7 +184,8 @@ module.exports = function () {
     return {
         getRequest: getRequest,
         postRequest: postRequest,
-        putRequest: putRequest
+        putRequest: putRequest,
+        filter: filter
     };
 };
 

@@ -5,7 +5,8 @@ var koa = require('koa'),
     logger = require('./logger.js').logger,
     views = require('co-views'),
     body = require('koa-better-body'),
-    trelloClient = require('./trello-client.js')();
+    trelloClient = require('./trello-client.js')(),
+    trelloSync = require('./trello-sync.js')();
 
 
 var serverPort = 3000;
@@ -27,6 +28,7 @@ router.head('/trelloCallback', function *(next){
 
 router.post('/trelloCallback', function *(next){
     logger.info(require('util').inspect(this.body));
+    yield trelloSync.updateChange(this.body);
 });
 
 
