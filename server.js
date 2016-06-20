@@ -28,7 +28,7 @@ router.head('/trelloCallback', function *(next){
 
 router.post('/trelloCallback', function *(next){
     logger.info(require('util').inspect(this.body));
-    yield trelloSync.updateChange(this.body);
+    trelloSync.updateChange(this.body);
 });
 
 
